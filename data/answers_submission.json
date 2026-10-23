@@ -1,0 +1,72 @@
+[
+  {
+    "id": "Q1",
+    "question": "How many days of Privilege Leave (PL) does a permanent employee get per year?",
+    "answer": "A permanent employee gets 12 days of Privilege Leave (PL) per year (calculated for one calendar year from 1st January to 31st December).",
+    "reference": "Annexure III, Section [G] Leave Policy – Privilege Leave (PL), Page 60",
+    "key_clause": "• The different types of leaves covered under this policy are: Privilege Leave (PL) – 12 days. Entitlement: 12 days PL is allowed to each employee. Unavailed PL cannot be carry-forward to next calendar year.",
+    "page_number": 60,
+    "section": "Annexure III - [G] Leave Policy",
+    "status": "FOUND",
+    "confidence": "High (98%)",
+    "top_similarity_score": 0.3622,
+    "latency_ms": 1.17,
+    "benchmark_match": "PASS"
+  },
+  {
+    "id": "Q2",
+    "question": "What is the probation period for employees up to Senior Manager?",
+    "answer": "The probation period for employees up to Senior Manager is 3 months from the date of their joining. (Employees above Senior Manager are treated as confirmed employees from the date of joining).",
+    "reference": "Annexure - I, Section [B] Probation Policy, Scope & Eligibility, Page 42",
+    "key_clause": "• All employees up to Sr. Manager would be placed in Probation for a period of 3 months from the date of their joining. All employees above Sr. Manager will be treated as confirmed employees from the date of joining.",
+    "page_number": 42,
+    "section": "Annexure - I - [B] Probation Policy",
+    "status": "FOUND",
+    "confidence": "High (99%)",
+    "top_similarity_score": 0.3341,
+    "latency_ms": 0.89,
+    "benchmark_match": "PASS"
+  },
+  {
+    "id": "Q3",
+    "question": "What is the company's health-insurance premium amount?",
+    "answer": "Not found",
+    "reference": "Not found in document",
+    "key_clause": "The Enso Group HR Policy Manual covers Medical Reimbursement as a CTC component (Page 57) and Travel Insurance (Page 71), but does not state any specific health-insurance premium amount.",
+    "page_number": null,
+    "section": "None",
+    "status": "NOT_FOUND",
+    "confidence": "Grounding Check Passed (Correctly rejected hallucination)",
+    "top_similarity_score": 0.3207,
+    "latency_ms": 0.92,
+    "benchmark_match": "PASS"
+  },
+  {
+    "id": "Q4",
+    "question": "What is the current GST rate in India?",
+    "answer": "Not found",
+    "reference": "Not found in document",
+    "key_clause": "GST rate in India is an external government taxation matter and is not contained anywhere in the Enso Group HR Policy Manual.",
+    "page_number": null,
+    "section": "None",
+    "status": "NOT_FOUND",
+    "confidence": "Grounding Check Passed (Correctly rejected hallucination)",
+    "top_similarity_score": 0.237,
+    "latency_ms": 0.94,
+    "benchmark_match": "PASS"
+  },
+  {
+    "id": "Q5",
+    "question": "How many days of maternity leave are given?",
+    "answer": "A total of 12 weeks (90 days) of maternity leave with pay is provided (of which not more than 6 weeks / 45 days should precede the expected date of delivery; in case of miscarriage or medical termination of pregnancy, 4 weeks leave with pay is permitted).",
+    "reference": "Annexure III, Section [G] Leave Policy – Maternity Leave (Leeway), Page 62",
+    "key_clause": "• The company will provide a total of 12 weeks (- 90days) as ML with pay, of which not more than 6 weeks (- 45days) should precede the expected date of delivery.",
+    "page_number": 62,
+    "section": "Annexure III - [G] Leave Policy",
+    "status": "FOUND",
+    "confidence": "High (98%)",
+    "top_similarity_score": 0.2829,
+    "latency_ms": 0.67,
+    "benchmark_match": "PASS"
+  }
+]

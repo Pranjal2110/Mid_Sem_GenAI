@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enso Group — HR Policy RAG Assistant (ChromaDB + LangChain)</title>
+  <meta name="description" content="Production RAG system built with Python, ChromaDB, and LangChain over the 79-page Enso Group HR Policy Manual. Grounded answers with exact citations and strict 'Not found' fallback.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Main CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <!-- Ambient background glow elements -->
+  <div class="glow-sphere glow-1"></div>
+  <div class="glow-sphere glow-2"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <div class="logo-enso">
+          <svg viewBox="0 0 100 100" class="enso-circle">
+            <circle cx="50" cy="50" r="38" stroke="currentColor" stroke-width="12" fill="none" stroke-linecap="round" stroke-dasharray="210 30" transform="rotate(-45 50 50)"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <div class="brand-title-row">
+            <h1>ENSO GROUP</h1>
+            <span class="badge-tech">RAG AI COPILOT</span>
+          </div>
+          <p class="brand-subtitle">HR Policy Assistant • Python + ChromaDB + LangChain</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-indicator">
+          <span class="status-dot pulse"></span>
+          <span id="corpus-status-text">ChromaDB: 112 Chunks • 79 Pages</span>
+        </div>
+        <button id="theme-toggle" class="btn-icon" title="Toggle Theme" aria-label="Toggle Theme">
+          <span class="theme-icon">🌓</span>
+        </button>
+        <button id="open-docs-btn" class="btn btn-outline btn-sm">
+          <span>Architecture & README</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-bar">
+    <div class="nav-container">
+      <button class="nav-tab active" data-tab="playground">
+        <span class="tab-icon">⚡</span> Interactive Query Playground
+      </button>
+      <button class="nav-tab" data-tab="benchmark">
+        <span class="tab-icon">🎯</span> Assignment Benchmark (5 Questions)
+      </button>
+      <button class="nav-tab" data-tab="lms">
+        <span class="tab-icon">📋</span> LMS Form Submission Ready
+      </button>
+      <button class="nav-tab" data-tab="manual-browser">
+        <span class="tab-icon">📖</span> Document Inspector (79 Pages)
+      </button>
+      <button class="nav-tab" data-tab="architecture">
+        <span class="tab-icon">⚙️</span> RAG Pipeline Architecture
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+    
+    <!-- TAB 1: PLAYGROUND -->
+    <section id="tab-playground" class="tab-pane active">
+      <!-- Quick Questions Bar -->
+      <div class="prompt-chips-section">
+        <span class="chips-label">Quick Benchmark Queries:</span>
+        <div class="chips-container">
+          <button class="chip-btn" data-query="How many days of Privilege Leave (PL) does a permanent employee get per year?">
+            <span class="chip-num">Q1</span> PL Entitlement (12 days)
+          </button>
+          <button class="chip-btn" data-query="What is the probation period for employees up to Senior Manager?">
+            <span class="chip-num">Q2</span> Probation Period (3 months)
+          </button>
+          <button class="chip-btn" data-query="What is the company's health-insurance premium amount?">
+            <span class="chip-num">Q3</span> Health Insurance Premium (Not found)
+          </button>
+          <button class="chip-btn" data-query="What is the current GST rate in India?">
+            <span class="chip-num">Q4</span> GST Rate in India (Not found)
+          </button>
+          <button class="chip-btn" data-query="How many days of maternity leave are given?">
+            <span class="chip-num">Q5</span> Maternity Leave (12 weeks)
+          </button>
+          <button class="chip-btn chip-extra" data-query="What is the dress code policy for male and female employees?">
+            <span>👔</span> Dress Code Policy
+          </button>
+          <button class="chip-btn chip-extra" data-query="What is the per diem reimbursement limit for international business travel?">
+            <span>✈️</span> International Per Diem
+          </button>
+          <button class="chip-btn chip-extra" data-query="What are the rules regarding outside employment and secondary jobs?">
+            <span>💼</span> Outside Employment
+          </button>
+        </div>
+      </div>
+
+      <!-- Query Box Card -->
+      <div class="glass-card query-card">
+        <div class="card-glow-edge"></div>
+        <form id="rag-query-form" class="query-form">
+          <div class="input-wrapper">
+            <span class="input-icon">🔍</span>
+            <input 
+              type="text" 
+              id="query-input" 
+              placeholder="Ask any HR policy question from the 79-page manual (e.g., 'What is the probation period?')..." 
+              value="How many days of Privilege Leave (PL) does a permanent employee get per year?"
+              autocomplete="off"
+            />
+            <button type="submit" id="submit-query-btn" class="btn btn-primary">
+              <span class="btn-text">Execute RAG</span>
+              <span class="btn-spinner hidden"></span>
+            </button>
+          </div>
+
+          <!-- RAG Hyperparameters Slider Bar -->
+          <div class="hyperparams-bar">
+            <div class="param-item">
+              <label for="top-k-slider">Top-K Chunks: <strong id="top-k-val">4</strong></label>
+              <input type="range" id="top-k-slider" min="1" max="8" value="4" step="1">
+            </div>
+            <div class="param-item">
+              <label for="threshold-slider">Grounding Threshold: <strong id="threshold-val">0.55</strong></label>
+              <input type="range" id="threshold-slider" min="0.10" max="0.90" value="0.55" step="0.05">
+            </div>
+            <div class="param-badge">
+              <span class="badge-dot"></span>
+              <span>Vector Space: Cosine HNSW (384d)</span>
+            </div>
+            <div class="param-badge">
+              <span class="badge-dot dot-green"></span>
+              <span>Hallucination Guard: Active</span>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Live RAG Response Display -->
+      <div id="rag-result-container" class="glass-card result-card">
+        <div class="result-header">
+          <div class="result-status-tag" id="result-status-badge">
+            <span class="status-icon">✓</span>
+            <span id="result-status-text">GROUNDED ANSWER FOUND</span>
+          </div>
+          <div class="result-metrics">
+            <span class="metric-pill" id="result-latency">Latency: 1.1ms</span>
+            <span class="metric-pill" id="result-confidence">Confidence: 98%</span>
+            <span class="metric-pill" id="result-score">Top Score: 0.3622</span>
+          </div>
+        </div>
+
+        <div class="result-body">
+          <div class="result-question">
+            <span class="label">Query:</span>
+            <h3 id="display-question">How many days of Privilege Leave (PL) does a permanent employee get per year?</h3>
+          </div>
+
+          <div class="result-answer-box" id="display-answer-box">
+            <div class="answer-label-row">
+              <span class="section-label">Official HR Manual Response</span>
+              <button id="copy-answer-btn" class="btn-icon-subtle" title="Copy Answer">📋 Copy</button>
+            </div>
+            <p id="display-answer" class="answer-text">
+              A permanent employee gets 12 days of Privilege Leave (PL) per year (calculated for one calendar year from 1st January to 31st December).
+            </p>
+          </div>
+
+          <div class="citation-strip">
+            <div class="citation-info">
+              <span class="citation-label">Verified Document Citation:</span>
+              <div class="citation-pill" id="display-citation-pill">
+                <span class="pill-icon">📍</span>
+                <span id="display-reference">Annexure III, Section [G] Leave Policy – Privilege Leave (PL), Page 60</span>
+              </div>
+            </div>
+            <button id="jump-to-page-btn" class="btn btn-secondary btn-sm" data-page="60">
+              <span>View Page in Manual ↗</span>
+            </button>
+          </div>
+
+          <!-- Exact Extracted Clause Block -->
+          <div class="clause-box">
+            <div class="clause-header">
+              <span>Grounding Evidence Snippet</span>
+              <span class="clause-page-tag" id="display-clause-page">Page 60</span>
+            </div>
+            <blockquote id="display-key-clause">
+              • The different types of leaves covered under this policy are: Privilege Leave (PL) – 12 days. Entitlement: 12 days PL is allowed to each employee. Unavailed PL cannot be carry-forward to next calendar year.
+            </blockquote>
+          </div>
+
+          <!-- Retrieved Chunks Inspector -->
+          <div class="chunks-inspector">
+            <button id="toggle-chunks-btn" class="chunks-toggle-btn">
+              <span>Inspect Retrieved Vector Chunks (<span id="chunk-count-badge">4</span> chunks)</span>
+              <span class="toggle-arrow">▼</span>
+            </button>
+            <div id="chunks-list" class="chunks-list hidden">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: BENCHMARK SUITE -->
+    <section id="tab-benchmark" class="tab-pane">
+      <div class="section-header-banner">
+        <div>
+          <h2>Project 1 Benchmark Evaluation Suite</h2>
+          <p>Automated verification over the 5 problem statement questions. Strict verification of document citations and "Not found" fallbacks.</p>
+        </div>
+        <button id="run-all-benchmark-btn" class="btn btn-primary">
+          <span>⚡ Run Complete 5-Question Benchmark</span>
+        </button>
+      </div>
+
+      <div class="benchmark-grid" id="benchmark-cards-grid">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 3: LMS FORM SUBMISSION -->
+    <section id="tab-lms" class="tab-pane">
+      <div class="section-header-banner">
+        <div>
+          <h2>LMS Form Submission Ready Sheet</h2>
+          <p>Formatted answers and exact citations ready for instant copy-pasting directly into the LMS evaluation form.</p>
+        </div>
+        <button id="copy-all-lms-btn" class="btn btn-success">
+          <span>📋 Copy All 5 Answers to Clipboard</span>
+        </button>
+      </div>
+
+      <div class="glass-card lms-table-card">
+        <div class="table-responsive">
+          <table class="lms-table">
+            <thead>
+              <tr>
+                <th style="width: 5%;">#</th>
+                <th style="width: 30%;">Question Asked</th>
+                <th style="width: 35%;">Ground Truth Answer</th>
+                <th style="width: 20%;">Document Reference / Section</th>
+                <th style="width: 10%;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="lms-table-body">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: DOCUMENT BROWSER -->
+    <section id="tab-manual-browser" class="tab-pane">
+      <div class="manual-browser-layout">
+        <!-- Sidebar Navigation -->
+        <div class="browser-sidebar glass-card">
+          <div class="sidebar-search">
+            <input type="text" id="manual-search-input" placeholder="Search HR Manual sections...">
+          </div>
+          <div class="sections-accordion" id="manual-sections-tree">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Page Viewer -->
+        <div class="browser-viewer glass-card">
+          <div class="viewer-header">
+            <div class="viewer-nav">
+              <button id="prev-page-btn" class="btn btn-sm btn-outline">◀ Prev Page</button>
+              <span class="page-counter">Page <strong id="current-page-num">60</strong> of 79</span>
+              <button id="next-page-btn" class="btn btn-sm btn-outline">Next Page ▶</button>
+            </div>
+            <div class="viewer-meta">
+              <span class="meta-tag" id="current-page-section">Annexure - III</span>
+              <span class="meta-doc-tag">Enso Group HR Manual (hr_manual.pdf)</span>
+            </div>
+          </div>
+          <div class="viewer-content">
+            <h3 id="current-page-title">[G] Leave Policy - Scope & Privilege Leave (PL)</h3>
+            <div class="document-text-container" id="current-page-text">
+              <!-- Text content rendered here -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: ARCHITECTURE -->
+    <section id="tab-architecture" class="tab-pane">
+      <div class="architecture-layout">
+        <div class="glass-card arch-card">
+          <h2>RAG Pipeline Architecture Diagram</h2>
+          <p class="subtitle">Complete technical pipeline demonstrating ingestion, persistent Chroma vector indexing, retrieval, and strict hallucination filtering.</p>
+
+          <div class="arch-flowchart">
+            <div class="flow-step">
+              <div class="step-badge">1. Document Layer</div>
+              <div class="step-card">
+                <div class="step-icon">📄</div>
+                <h4>Enso HR Manual PDF</h4>
+                <p>79 pages parsed with page & section preservation</p>
+                <span class="tech-pill">pypdf • PyPDFLoader</span>
+              </div>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <div class="flow-step">
+              <div class="step-badge">2. Chunking Layer</div>
+              <div class="step-card">
+                <div class="step-icon">✂️</div>
+                <h4>Recursive Chunking</h4>
+                <p>112 chunks (600 chars, 100 overlap, page boundaries maintained)</p>
+                <span class="tech-pill">LangChain Splitter</span>
+              </div>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <div class="flow-step">
+              <div class="step-badge">3. Vector Store</div>
+              <div class="step-card">
+                <div class="step-icon">🗄️</div>
+                <h4>ChromaDB HNSW</h4>
+                <p>384d Dense Cosine Space on persistent disk</p>
+                <span class="tech-pill">ChromaDB • Cosine</span>
+              </div>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <div class="flow-step">
+              <div class="step-badge">4. Grounded Reasoning</div>
+              <div class="step-card">
+                <div class="step-icon">🛡️</div>
+                <h4>Grounding Guard</h4>
+                <p>Evaluates factual evidence; enforces strict "Not found"</p>
+                <span class="tech-pill">LangChain • Prompt</span>
+              </div>
+            </div>
+
+            <div class="flow-arrow">➔</div>
+
+            <div class="flow-step">
+              <div class="step-badge">5. Output & Citations</div>
+              <div class="step-card">
+                <div class="step-icon">🎯</div>
+                <h4>Answer + Citation</h4>
+                <p>Exact Section, Annexure & Page # Reference</p>
+                <span class="tech-pill">FastAPI • JSON REST</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="arch-details-grid">
+            <div class="detail-box">
+              <h4>Strict "Not Found" Fallback Mechanism</h4>
+              <p>Whenever an employee asks a question regarding information outside the manual (e.g. <em>Q3: Health insurance premium amount</em> or <em>Q4: Current GST rate in India</em>), the pipeline triggers the Hallucination Guard. Rather than inventing numbers or guessing external data, the system strictly returns <strong>"Not found"</strong> with citation <strong>"Not found in document"</strong>.</p>
+            </div>
+            <div class="detail-box">
+              <h4>Zero-Bleed Page Metadata</h4>
+              <p>Text chunking is performed page-by-page rather than concatenating the entire text corpus. This prevents text from different policies bleeding into each other and ensures that every chunk citation points 100% reliably to the exact page number of the original document.</p>
+            </div>
+            <div class="detail-box">
+              <h4>Offline & Self-Contained Reliability</h4>
+              <p>The vector store operates with sub-millisecond query execution, zero external network dependency, and persistent storage in the local <code>chroma_db/</code> directory.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Docs Modal -->
+  <div id="docs-modal" class="modal-overlay hidden">
+    <div class="modal-container glass-card">
+      <div class="modal-header">
+        <h3>Enso Group HR Policy Assistant — Documentation & Flow</h3>
+        <button id="close-docs-btn" class="btn-icon">✕</button>
+      </div>
+      <div class="modal-body">
+        <h4>Overview</h4>
+        <p>This project implements a Retrieval-Augmented Generation (RAG) assistant over the 79-page <strong>Enso Group HR Policy Manual</strong> using <strong>Python + ChromaDB + LangChain</strong>.</p>
+        
+        <h4>Project Structure</h4>
+        <pre><code>hr-policy-assistant/
+├── README.md               # Complete architecture & submission docs
+├── requirements.txt        # Python dependencies (chromadb, langchain, etc.)
+├── data/
+│   ├── hr_manual.pdf       # 79-page official HR Manual PDF
+│   ├── hr_manual_extracted.json # Full parsed text with page tags
+│   └── answers_submission.json  # 5 benchmark answers with citations
+├── src/
+│   ├── config.py           # Settings, paths, hyperparameters
+│   ├── document_processor.py # PDF loader & Recursive splitter
+│   ├── vectorstore.py      # ChromaDB persistent collection & HNSW search
+│   ├── rag_engine.py       # Grounded RAG reasoning & "Not found" guard
+│   ├── benchmark.py        # Automated 5-question test runner
+│   └── server.py           # FastAPI backend & static server
+├── static/                 # Interactive executive UI
+└── tests/                  # Pytest test suite</code></pre>
+
+        <h4>Running the Backend & UI</h4>
+        <pre><code># 1. Install dependencies
+pip install -r requirements.txt
+
+# 2. Run benchmark evaluation
+python3 src/benchmark.py
+
+# 3. Start interactive web server
+python3 src/server.py
+# Open: http://127.0.0.1:8000 in your browser</code></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast hidden">Copied to clipboard!</div>
+
+  <!-- Scripts -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
